@@ -6,8 +6,6 @@ comments: true
 categories: 
 ---
 
-# 使用virtualenv创建隔离的python环境
-
 python各种版本之间的不兼容性着实让人头疼, 工作中使用python常常需要一个团队中统一python以及各种库的版本. 在ruby中有一个好用的工具[rvm](<rvm.io>)可以在用户的家目录下安装一个(或多个)本地的ruby, 然后各个工程可以使用自己的ruby和gem的版本.Python里面有没有类似的工具呢? 有的, 这就是virtualenv. 
 
 ## 本地安装python 
