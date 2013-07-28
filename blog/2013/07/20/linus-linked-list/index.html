@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Hacking is great fun.</title>
+  <title>二级指针在链表操作中的应用 - Hacking is great fun.</title>
   <meta name="author" content="Chi Zhang">
 
   
-  <meta name="description" content="使用virtualenv创建隔离的python环境 python各种版本之间的不兼容性着实让人头疼, 工作中使用python常常需要一个团队中统一python以及各种库的版本. 在ruby中有一个好用的工具rvm可以在用户的家目录下安装一个(或多个)本地的ruby, &hellip;">
+  <meta name="description" content="故事起源于Linus大神在回答水友提问的时候有这么一段: http://meta.slashdot.org/story/12/10/11/0030249/linus-torvalds-answers-your-questions At the opposite end of the &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://eshock.github.io">
+  <link rel="canonical" href="http://eshock.github.io/blog/2013/07/20/linus-linked-list">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Hacking is great fun." type="application/atom+xml">
@@ -65,166 +65,12 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article class="hentry" role="article">
   
-  
-  
-    <article>
-      
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2013/07/28/using-virtualenv/">使用virtualenv创建隔离的python环境</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-07-28T18:05:00+08:00" pubdate data-updated="true">Jul 28<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/07/28/using-virtualenv/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h1>使用virtualenv创建隔离的python环境</h1>
-
-<p>python各种版本之间的不兼容性着实让人头疼, 工作中使用python常常需要一个团队中统一python以及各种库的版本. 在ruby中有一个好用的工具<a href="rvm.io">rvm</a>可以在用户的家目录下安装一个(或多个)本地的ruby, 然后各个工程可以使用自己的ruby和gem的版本.Python里面有没有类似的工具呢? 有的, 这就是virtualenv.</p>
-
-<h2>本地安装python</h2>
-
-<p>虽然virtualenv可以直接从系统本身的python中使用, 但是这偏离了我们的初衷: 使用完全隔离的, 和系统默认的python无关的环境. 为什么要这样呢? 因为系统中有很多程序依赖于系统的python, 如果我们替代掉系统的python, 会导致一些程序出错. 例如在centos上, 如果把系统默认的python给换掉, ibus和yum就很有可能起不来了. 如果使用系统的python版本, 又可能让我们开发的应用程序跑不起来, 比较头疼. 所以最好的解决方案还是本地安装一个和系统无关的python.</p>
-
-<p>如果在ubuntu上编译安装python, 建议先安装几个依赖包, 否则编译出来的python会缺少一些功能, 例如没有readline的话, 命令行就不能补全了, 这很蛋疼, 必须预防:</p>
-
-<pre><code>apt-get install build-essential libncursesw5-dev libreadline5-dev libssl-dev libgdbm-dev libc6-dev libsqlite3-dev tk-dev libgdbm-dev libsqlite3-dev libbz2-dev
-</code></pre>
-
-<p>安装python可以直接从源代码去安装:</p>
-
-<pre><code>mkdir ~/src
-wget http://www.python.org/ftp/python/2.7.2/Python-2.7.2.tgz
-tar -zxvf Python-2.7.2.tar.gz
-cd Python-2.7.2
-mkdir ~/.localpython
-./configure --prefix=/home/&lt;user&gt;/.localpython
-make
-make install
-</code></pre>
-
-<p>把2.7.2换成你需要的python版本. 另外, 执行完configure之后不要急着make, 先确认一下输出中有没有提示你缺少某些模块. 如果有的话, 把这些依赖装上吧, 免得以后麻烦.</p>
-
-<h2>安装virtualenv</h2>
-
-<pre><code>cd ~/src
-wget http://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.5.2.tar.gz#md5=fbcefbd8520bb64bc24a560c6019a73c
-tar -zxvf virtualenv-1.5.2.tar.gz
-cd virtualenv-1.5.2/ 
-~/.localpython/bin/python setup.py install
-</code></pre>
-
-<p>注意把1.5.2换成最新的virtualenv版本. 装好以后, 就可以从<code>~/.localpython</code>目录执行virtualenv了.</p>
-
-<h2>virtualenv的基本使用</h2>
-
-<p>使用<code>virtualenv</code>命令可以创建一个隔离环境. 后面可以带参数, 例如:</p>
-
-<pre><code>virtualenv &lt;envname&gt; --prompt=test
-</code></pre>
-
-<p>其中<code>--prompt</code>后的参数表示在使用该环境后的提示符, 也就是在该环境被激活以后, shell提示符前面会多出来的一串, 用来提示你当前用的是哪个虚拟环境. 执行之后, 会在<code>&lt;envname&gt;</code>目录下创建一个虚拟环境, 把需要的脚本文件都拷贝到这个目录下. 在激活这个环境之后, 各种python包就会安装到这个目录下.</p>
-
-<p>要激活一个虚拟环境, 使用 <code>source env_dir/bin/activate</code>. 这个脚本会帮你设置一些环境变量, 把python映射到这个目录下. 运行之后会看到shell提示符的变化.</p>
-
-<p>要退出一个虚拟环境, 使用 <code>deactivate</code>命令. 仔细观察一下, 这是个在<code>activate</code>脚本中定义的函数, 会帮你还原各种相关环境变量.</p>
-
-<h2>自动安装项目依赖</h2>
-
-<p>有了virtualenv之后, 使用pip安装各种包就会安装到当前的虚拟环境下, 从而跟系统的python无关(跟自己在家目录下本地安装的python也无关!). 因此, 可以在不同的虚拟环境下装不同的包, 而不用担心冲突. 不过还有一点不方便的是, python里面没有类似于bundler这种东西, 不能比较方便的自动安装依赖. 不过好在virtualenv可以自定义bootstrap脚本, 方便用户在创建环境时自动安装依赖. 例如:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">virtualenv</span><span class="o">,</span> <span class="nn">textwrap</span>
-</span><span class='line'><span class="n">output</span> <span class="o">=</span> <span class="n">virtualenv</span><span class="o">.</span><span class="n">create_bootstrap_script</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
-</span><span class='line'><span class="s">import os, subprocess</span>
-</span><span class='line'><span class="s">packages = [</span>
-</span><span class='line'><span class="s">    &quot;MySQL-python==1.2.4&quot;,</span>
-</span><span class='line'><span class="s">    &quot;pycrypto==2.6&quot;,</span>
-</span><span class='line'><span class="s">    &quot;pyflakes==0.6.1&quot;,</span>
-</span><span class='line'><span class="s">    &quot;pymongo==2.4.1&quot;,</span>
-</span><span class='line'><span class="s">    &quot;python-memcached==1.48&quot;,</span>
-</span><span class='line'><span class="s">    &quot;redis==2.7.1&quot;,</span>
-</span><span class='line'><span class="s">    &quot;simplejson==3.1.3&quot;,</span>
-</span><span class='line'><span class="s">    &quot;SQLAlchemy==0.7.4&quot;,</span>
-</span><span class='line'><span class="s">    &quot;thrift==0.9.0&quot;,</span>
-</span><span class='line'><span class="s">    &quot;tornado==2.4.1&quot;,</span>
-</span><span class='line'><span class="s">    &quot;xpinyin==0.4.5&quot;,</span>
-</span><span class='line'><span class="s">]</span>
-</span><span class='line'><span class="s">def after_install(options, home_dir):</span>
-</span><span class='line'><span class="s">    for p in packages:</span>
-</span><span class='line'><span class="s">        while True:</span>
-</span><span class='line'><span class="s">            ret = subprocess.call([join(home_dir, &#39;bin&#39;, &#39;pip&#39;), &#39;install&#39;, p])</span>
-</span><span class='line'><span class="s">            if ret == 0:</span>
-</span><span class='line'><span class="s">                break</span>
-</span><span class='line'><span class="s">            else:</span>
-</span><span class='line'><span class="s">                print &quot;ret = &quot;, ret</span>
-</span><span class='line'><span class="s">                print &quot;Try again: &quot; + p</span>
-</span><span class='line'><span class="s">&quot;&quot;&quot;</span><span class="p">))</span>
-</span><span class='line'><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;create_env.py&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>在<code>after_install</code>函数中, 我们使用pip安装指定的包(注意这里有个重试的功能, 天朝的网络你懂的), 也可以做任何其他的操作, 十分灵活(当然, 也十分土).
-把以上代码保存为<code>boot.py</code>, 运行一下会产生一个<code>create_env.py</code>的脚本, 然后使用这个脚本去代替virtualenv来创建环境, 就可以在环境建好之后自动装好这些依赖.</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/07/20/linus-linked-list/">二级指针在链表操作中的应用</a></h1>
+      <h1 class="entry-title">二级指针在链表操作中的应用</h1>
     
     
       <p class="meta">
@@ -242,14 +88,14 @@ cd virtualenv-1.5.2/
 
 <time datetime="2013-07-20T19:44:00+08:00" pubdate data-updated="true">Jul 20<span>th</span>, 2013</time>
         
-         | <a href="/blog/2013/07/20/linus-linked-list/#disqus_thread">Comments</a>
+         | <a href="#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>故事起源于Linus大神在回答水友提问的时候有这么一段: <a href="http://meta.slashdot.org/story/12/10/11/0030249/linus-torvalds-answers-your-questions">http://meta.slashdot.org/story/12/10/11/0030249/linus-torvalds-answers-your-questions</a></p>
+<div class="entry-content"><p>故事起源于Linus大神在回答水友提问的时候有这么一段: <a href="http://meta.slashdot.org/story/12/10/11/0030249/linus-torvalds-answers-your-questions">http://meta.slashdot.org/story/12/10/11/0030249/linus-torvalds-answers-your-questions</a></p>
 
 <p>At the opposite end of the spectrum, I actually wish more people understood the really core low-level kind of coding. Not big, complex stuff like the lockless name lookup, but simply good use of pointers-to-pointers etc. For example, I&rsquo;ve seen too many people who delete a singly-linked list entry by keeping track of the &ldquo;prev&rdquo; entry, and then to delete the entry, doing something like</p>
 
@@ -534,18 +380,65 @@ cd virtualenv-1.5.2/
 
 
 </div>
+
+
+  <footer>
+    <p class="meta">
+      
   
+
+<span class="byline author vcard">Posted by <span class="fn">Chi Zhang</span></span>
+
+      
+
+
+
+
+
+
+
+
   
 
 
-    </article>
+<time datetime="2013-07-20T19:44:00+08:00" pubdate data-updated="true">Jul 20<span>th</span>, 2013</time>
+      
+
+<span class="categories">
   
-  <div class="pagination">
+    <a class='category' href='/blog/categories/c/'>C</a>
+  
+</span>
+
+
+    </p>
     
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://eshock.github.io/blog/2013/07/20/linus-linked-list/" data-via="" data-counturl="http://eshock.github.io/blog/2013/07/20/linus-linked-list/" >Tweet</a>
+  
+  
+  
 </div>
+
+    
+    <p class="meta">
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/07/28/using-virtualenv/" title="Next Post: 使用virtualenv创建隔离的python环境">使用virtualenv创建隔离的python环境 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
 <aside class="sidebar">
   
     <section>
@@ -566,7 +459,7 @@ cd virtualenv-1.5.2/
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   
   <a href="https://github.com/eshock">@eshock</a> on GitHub
@@ -599,6 +492,7 @@ cd virtualenv-1.5.2/
   
 </aside>
 
+
     </div>
   </div>
   <footer role="contentinfo"><p>
@@ -613,7 +507,10 @@ cd virtualenv-1.5.2/
       var disqus_shortname = 'eshockgithubio';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://eshock.github.io/blog/2013/07/20/linus-linked-list/';
+        var disqus_url = 'http://eshock.github.io/blog/2013/07/20/linus-linked-list/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
