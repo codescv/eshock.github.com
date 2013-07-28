@@ -4,7 +4,7 @@
   <title><![CDATA[Hacking is great fun.]]></title>
   <link href="http://eshock.github.io/atom.xml" rel="self"/>
   <link href="http://eshock.github.io/"/>
-  <updated>2013-07-28T18:11:07+08:00</updated>
+  <updated>2013-07-28T18:13:44+08:00</updated>
   <id>http://eshock.github.io/</id>
   <author>
     <name><![CDATA[Chi Zhang]]></name>
@@ -18,9 +18,7 @@
     <link href="http://eshock.github.io/blog/2013/07/28/using-virtualenv/"/>
     <updated>2013-07-28T18:05:00+08:00</updated>
     <id>http://eshock.github.io/blog/2013/07/28/using-virtualenv</id>
-    <content type="html"><![CDATA[<h1>使用virtualenv创建隔离的python环境</h1>
-
-<p>python各种版本之间的不兼容性着实让人头疼, 工作中使用python常常需要一个团队中统一python以及各种库的版本. 在ruby中有一个好用的工具<a href="rvm.io">rvm</a>可以在用户的家目录下安装一个(或多个)本地的ruby, 然后各个工程可以使用自己的ruby和gem的版本.Python里面有没有类似的工具呢? 有的, 这就是virtualenv.</p>
+    <content type="html"><![CDATA[<p>python各种版本之间的不兼容性着实让人头疼, 工作中使用python常常需要一个团队中统一python以及各种库的版本. 在ruby中有一个好用的工具<a href="rvm.io">rvm</a>可以在用户的家目录下安装一个(或多个)本地的ruby, 然后各个工程可以使用自己的ruby和gem的版本.Python里面有没有类似的工具呢? 有的, 这就是virtualenv.</p>
 
 <h2>本地安装python</h2>
 
