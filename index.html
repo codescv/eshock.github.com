@@ -9,7 +9,8 @@
   <meta name="author" content="Chi Zhang">
 
   
-  <meta name="description" content="python各种版本之间的不兼容性着实让人头疼, 工作中使用python常常需要一个团队中统一python以及各种库的版本. 在ruby中有一个好用的工具rvm可以在用户的家目录下安装一个(或多个)本地的ruby, 然后各个工程可以使用自己的ruby和gem的版本. &hellip;">
+  <meta name="description" content="在c/c++中, 使用new或者malloc来分配int数组是很快的, 因为没有初始化过程. 但是在使用时会有问题: 如果
+不初始化, 如何知道哪一项的数据是有效的? 如果初始化, 那么效率又会比较低下. 假设有一个比较大数组a[0..n-1], 数组里每项是一个int变量, 但只有k项被使用(k &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -67,6 +68,86 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/08/04/key-indexing/">使用Key Indexing来避免初始化</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-08-04T16:59:00+08:00" pubdate data-updated="true">Aug 4<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/08/04/key-indexing/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在c/c++中, 使用<code>new</code>或者<code>malloc</code>来分配int数组是很快的, 因为没有初始化过程. 但是在使用时会有问题: 如果
+不初始化, 如何知道哪一项的数据是有效的? 如果初始化, 那么效率又会比较低下.</p>
+
+<p>假设有一个比较大数组a[0..n-1], 数组里每项是一个int变量, 但只有k项被使用(k &lt;&lt; n). 如何设计一个数据
+结构, 避免初始化a中所有的元素, 又能正确的访问数组中的每一项? 假设内存足够.</p>
+
+<p>可以使用两个长度为n的辅助数组from和to. 例如:</p>
+
+<pre><code>        0 1 2 3 4 5 6 7 8 9
+a    = [?|1|?|?|2|?|?|9|?|?|]
+from = [?|0|?|?|2|?|?|1|?|?|]
+to   = [1|7|4|?|?|?|?|?|?|?|]
+              top
+</code></pre>
+
+<p>from数组表示的是, a[i]被初始化时, a数组中元素的个数, 也就是说, a[i]是第from[i]个被初始化的.</p>
+
+<p>to数组表示的是, 第i个被初始化的元素, 它在a中的下标是to[i].</p>
+
+<p>top表示的是to数组中有效元素的个数, 指向to数组中所有有效元素的下一项, 它的值等于目前a数组中有效元素的个数.</p>
+
+<p>图中为先后设置<code>a[1]=1; a[7]=9; a[4]=2;</code>后, a, from, to中的结果.</p>
+
+<p>在设置一个元素时, 使用如下方法:</p>
+
+<pre><code>a[i] = number;
+if (!is_initialized(i)) {
+    from[i] = top;
+    to[top] = i;
+    top++;
+}
+</code></pre>
+
+<ul>
+<li><code>a[1] = 1</code>后, from[1] = 0, to[0] = 1, top = 1;</li>
+<li><code>a[7] = 9</code>后, from[7] = 1, to[1] = 7, top = 2;</li>
+<li><code>a[4] = 2</code>后, from[4] = 2, to[2] = 4, top = 3.</li>
+</ul>
+
+
+<p>如何判断一个<code>a[i]</code>是否被初始化? 注意到如果<code>a[i]</code>被初始化了, 一定有<code>to[from[i]] == i</code>. 但是光有这个还不够, 因为<code>from[i]</code>可能指向<code>to</code>中某一个没初始化的位置, 使得<code>to[from[i]] == i</code>碰巧成立. 所以, 还得加上一个条件, 就是<code>from[i] &lt; top</code>. 这样, 如果<code>from[i]</code>不在<code>0..top-1</code>之内, 那么就一定没被初始化. 如果from[i]在<code>0..top</code>之内, 有两种情况, 一种是i在1,4,7之内, 这样一定有<code>to[from[i]] == i</code>, 那么a[i]已经被初始化过了; 一种是i不在1,4,7之内, 那么一定有<code>to[from[i]] != i</code>. 因此要判断a[i]是否被初始化, 可以用<code>from[i] &lt; top &amp;&amp; to[from[i]] == top</code>.</p>
+
+<p>这个技巧被称为key indexing.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -549,6 +630,10 @@ cd virtualenv-1.5.2/
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/08/04/key-indexing/">使用Key Indexing来避免初始化</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/07/28/using-virtualenv/">使用virtualenv创建隔离的python环境</a>
