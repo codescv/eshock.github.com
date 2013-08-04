@@ -43,5 +43,16 @@ top表示的是to数组中有效元素的个数, 指向to数组中所有有效�
 
 如何判断一个`a[i]`是否被初始化? 注意到如果`a[i]`被初始化了, 一定有`to[from[i]] == i`. 但是光有这个还不够, 因为`from[i]`可能指向`to`中某一个没初始化的位置, 使得`to[from[i]] == i`碰巧成立. 所以, 还得加上一个条件, 就是`from[i] < top`. 这样, 如果`from[i]`不在`0..top-1`之内, 那么就一定没被初始化. 如果from[i]在`0..top`之内, 有两种情况, 一种是i在1,4,7之内, 这样一定有`to[from[i]] == i`, 那么a[i]已经被初始化过了; 一种是i不在1,4,7之内, 那么一定有`to[from[i]] != i`. 因此要判断a[i]是否被初始化, 可以用`from[i] < top && to[from[i]] == top`.
 
-这个技巧被称为key indexing.
+这个技巧被称为key indexing, 在Programming Pearls里有提到过.
 
+换个角度想想, key indexing其实是hashing的一个特例! 它的hash function就返回原本的key. 这里的i就是key, from数组其实是hash function, 而to数组告诉我们元素i是否被初始化过. 于是from, to这两个数组可以用一个hash table来代替:
+
+    a[i] = number;
+    init_hash[i] = true;
+
+    if (init_hash[i]) {
+        // 第i个元素被初始化过了
+        ...
+    }
+
+因此, 如果需要更省空间话, 可以用hashing来优化.
