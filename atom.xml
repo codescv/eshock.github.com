@@ -4,7 +4,7 @@
   <title><![CDATA[Hacking is great fun.]]></title>
   <link href="http://eshock.github.io/atom.xml" rel="self"/>
   <link href="http://eshock.github.io/"/>
-  <updated>2013-08-04T17:01:43+08:00</updated>
+  <updated>2013-08-04T17:26:19+08:00</updated>
   <id>http://eshock.github.io/</id>
   <author>
     <name><![CDATA[Chi Zhang]]></name>
@@ -60,7 +60,20 @@ if (!is_initialized(i)) {
 
 <p>如何判断一个<code>a[i]</code>是否被初始化? 注意到如果<code>a[i]</code>被初始化了, 一定有<code>to[from[i]] == i</code>. 但是光有这个还不够, 因为<code>from[i]</code>可能指向<code>to</code>中某一个没初始化的位置, 使得<code>to[from[i]] == i</code>碰巧成立. 所以, 还得加上一个条件, 就是<code>from[i] &lt; top</code>. 这样, 如果<code>from[i]</code>不在<code>0..top-1</code>之内, 那么就一定没被初始化. 如果from[i]在<code>0..top</code>之内, 有两种情况, 一种是i在1,4,7之内, 这样一定有<code>to[from[i]] == i</code>, 那么a[i]已经被初始化过了; 一种是i不在1,4,7之内, 那么一定有<code>to[from[i]] != i</code>. 因此要判断a[i]是否被初始化, 可以用<code>from[i] &lt; top &amp;&amp; to[from[i]] == top</code>.</p>
 
-<p>这个技巧被称为key indexing.</p>
+<p>这个技巧被称为key indexing, 在Programming Pearls里有提到过.</p>
+
+<p>换个角度想想, key indexing其实是hashing的一个特例! 它的hash function就返回原本的key. 这里的i就是key, from数组其实是hash function, 而to数组告诉我们元素i是否被初始化过. 于是from, to这两个数组可以用一个hash table来代替:</p>
+
+<pre><code>a[i] = number;
+init_hash[i] = true;
+
+if (init_hash[i]) {
+    // 第i个元素被初始化过了
+    ...
+}
+</code></pre>
+
+<p>因此, 如果需要更省空间话, 可以用hashing来优化.</p>
 ]]></content>
   </entry>
   
