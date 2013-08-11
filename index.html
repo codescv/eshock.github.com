@@ -9,8 +9,8 @@
   <meta name="author" content="Chi Zhang">
 
   
-  <meta name="description" content="在c/c++中, 使用new或者malloc来分配int数组是很快的, 因为没有初始化过程. 但是在使用时会有问题: 如果
-不初始化, 如何知道哪一项的数据是有效的? 如果初始化, 那么效率又会比较低下. 假设有一个比较大数组a[0..n-1], 数组里每项是一个int变量, 但只有k项被使用(k &hellip;">
+  <meta name="description" content="高阶函数 在python里面decorator看起来是个挺高端大气上档次的词, 不过这个东西在函数式语言里面其实很稀松平常, 用一句话概括起来就是高阶函数的语法糖.
+什么叫高阶函数(high order procedures)呢? 就是返回值或者参数是函数的函数. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -68,6 +68,360 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/08/11/python-decorators/">关于python Decorators</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-08-11T21:15:00+08:00" pubdate data-updated="true">Aug 11<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/08/11/python-decorators/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>高阶函数</h2>
+
+<p>在python里面decorator看起来是个挺高端大气上档次的词, 不过这个东西在函数式语言里面其实很稀松平常, 用一句话概括起来就是高阶函数的语法糖.
+什么叫高阶函数(high order procedures)呢? 就是返回值或者参数是函数的函数. 比如我们现在有个函数<code>hello_world</code>:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">hello_word</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;hello world!&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个函数的个功能是打印一行字&#8221;hello world&#8221;. 现在我们想写一个函数, 它的功能是把<code>hello_word</code>这行字打印10遍, 怎么做呢? 简单:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">hello_world_10</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">hello_world</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>现在我们站的更高一点, 希望写一个更通用的函数, 可以将任意函数执行任意10次, 要怎么办呢?</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">ten_times</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">new_fun</span><span class="p">():</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+</span><span class='line'>            <span class="n">func</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">new_fun</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">hello_world_10</span> <span class="o">=</span> <span class="n">ten_times</span><span class="p">(</span><span class="n">hello_world</span><span class="p">)</span>
+</span><span class='line'><span class="n">hello_world_10</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到, <code>ten_times</code>这个函数比我们一般的函数更&#8221;高级&#8221;一些, 它接受的参数是一个函数, 把这个函数进行一些加工(执行10次)后, 返回一个新的函数.
+这个函数就是高阶函数.</p>
+
+<h2>decorator</h2>
+
+<p>理解了高阶函数后, 我们就可以看看decorator了. 我们把前一个例子改为:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nd">@ten_times</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">hello_world_10</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;hello world!&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样, 新的<code>hello_world_10</code>和原来的版本完全等价. 所以说, <code>@ten_times</code>其实是以下代码的语法糖:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">hello_world_10</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">print</span> <span class="s">&quot;hello world!&quot;</span>
+</span><span class='line'><span class="n">hello_world_10</span> <span class="o">=</span> <span class="n">ten_times</span><span class="p">(</span><span class="n">hello_world_10</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>原函数带参数</h2>
+
+<p>假设我们有如下<code>add</code>函数:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这一次, 我们的<code>ten_times</code>函数希望把原函数的<em>返回值</em>乘以10, 怎么做呢?</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">ten_times</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">new_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">new_func</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@ten_times</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">add_10</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>由此可见, 我们在decorator的定义中, 将新函数的输入传递给原函数即可.</p>
+
+<h2>decorator带参数</h2>
+
+<p>这次我们想把<code>ten_times</code>写的更加general一些, 我们希望它可以接受一个参数<code>times</code>, 可以将任意函数执行的结果乘以任意次. 首先我们用高阶函数的方式:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">times</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">times_f</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">new_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">time</span> <span class="o">*</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">new_func</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">times_f</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">ten_times</span> <span class="o">=</span> <span class="n">times</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</span><span class='line'><span class="n">add_10</span> <span class="o">=</span> <span class="n">ten_times</span><span class="p">(</span><span class="n">add</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>现在有点复杂了, 对吧? <code>times</code>首先接受一个参数<code>time</code>, 返回一个函数<code>times_f</code>, 这个<code>times_f</code>函数接受一个函数<code>func</code>作为参数, 然后又返回一个新的函数<code>new_func</code>. 换句话说, 这个函数返回了一个函数, 后者又返回一个函数.
+注意到<code>new_func</code>引用了<code>times_f</code>中的局部变量<code>func</code>, 这样的函数被称为闭包(closure). 用decorator的语法糖要怎么写呢?</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nd">@times</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">add_10</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>从之前的经验我们可以看到, <code>ten_times</code>这个函数需要返回一个函数, 所以这里我们知道<code>times(10)</code>也是一个函数,它的返回值是一个函数, 由此可知<code>times</code>是一个返回(返回函数的函数)的函数, 也印证了前面的分析.</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nd">@times</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">add_10</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>一点小问题</h2>
+
+<p>我们还是回到比较简单的<code>ten_times</code>这个函数:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nd">@ten_times</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">add</span><span class="o">.</span><span class="n">__name__</span>
+</span><span class='line'><span class="s">&#39;new_func&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我们看到, <code>add</code>的<code>__name__</code>属性变成了<code>new_func</code>! 仔细想想, 这很正常, 因为ten_times返回的函数就是<code>new_func</code>呀! 我们先暴力fix一下:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">ten_times</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">new_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">new_func</span><span class="o">.</span><span class="n">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">new_func</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@ten_times</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">add_10</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">add_10</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">function</span> <span class="n">add_10</span> <span class="n">at</span> <span class="mh">0x10da62140</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>的确, 这个问题解决了. 不过, 还有<code>__doc__</code>等等属性呢?  每次声明decorator的时候都要这么搞一下, 不蛋疼么?
+是的, 我们可以把这些fix的代码放到一起:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">fix_props</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">new_f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">new_f</span><span class="o">.</span><span class="n">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+</span><span class='line'>        <span class="n">new_f</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">__doc__</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">new_f</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">wrapper</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">ten_times</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+</span><span class='line'>    <span class="nd">@fix_props</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">new_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">new_func</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样, 就帮我们完成了这些琐碎的小问题. <code>fix_props</code>这个decorator可以将原函数的属性复制到新的wrapper函数, 使得原函数的docstring, name等不会丢失.
+万一python升级了, 函数又有新的属性了, 肿么办?幸运的是, python里面有专门的库函数可以解决这个问题:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">ten_times</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+</span><span class='line'>    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">new_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">new_func</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个<code>wraps</code>的原理就和我们上面的<code>fix_props</code>类似.</p>
+
+<h2>应用</h2>
+
+<p>decorator在python里有挺多应用的, 最典型的是<code>@classmethod</code>和<code>@property</code>. 例如:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">__x</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@property</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__x</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@x.setter</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xval</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">__x</span> <span class="o">=</span> <span class="n">xval</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@classmethod</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">my_name</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="s">&quot;A&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">A</span><span class="o">.</span><span class="n">my_name</span><span class="p">()</span>
+</span><span class='line'><span class="s">&#39;A&#39;</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">x</span>
+</span><span class='line'><span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -643,6 +997,10 @@ cd virtualenv-1.5.2/
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/08/11/python-decorators/">关于python Decorators</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/08/04/key-indexing/">使用Key Indexing来避免初始化</a>

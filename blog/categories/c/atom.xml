@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C | Hacking is great fun.]]></title>
   <link href="http://eshock.github.io/blog/categories/c/atom.xml" rel="self"/>
   <link href="http://eshock.github.io/"/>
-  <updated>2013-08-04T17:26:19+08:00</updated>
+  <updated>2013-08-11T23:08:59+08:00</updated>
   <id>http://eshock.github.io/</id>
   <author>
     <name><![CDATA[Chi Zhang]]></name>
@@ -22,29 +22,18 @@
 
 <p>At the opposite end of the spectrum, I actually wish more people understood the really core low-level kind of coding. Not big, complex stuff like the lockless name lookup, but simply good use of pointers-to-pointers etc. For example, I&rsquo;ve seen too many people who delete a singly-linked list entry by keeping track of the &ldquo;prev&rdquo; entry, and then to delete the entry, doing something like</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">prev</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">prev</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">else</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">list_head</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock lang:c %}
+if (prev)</p>
+
+<pre><code>prev-&gt;next = entry-&gt;next;
+</code></pre>
+
+<p>else</p>
+
+<pre><code>list_head = entry-&gt;next;
+</code></pre>
+
+<p>{% endcodeblock %}</p>
 
 <p>and whenever I see code like that, I just go &ldquo;This person doesn&rsquo;t understand pointers&rdquo;. And it&rsquo;s sadly quite common.</p>
 
@@ -54,81 +43,48 @@
 
 <p>可能这样说还不是很清楚，让我们来看个比较完整的例子吧：</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">Node</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="n">find_and_delete</span><span class="p">(</span><span class="n">Node</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">head</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Node</span> <span class="o">*</span><span class="n">prev</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'><span class="n">Node</span> <span class="o">*</span><span class="n">entry</span> <span class="o">=</span> <span class="n">head</span><span class="p">;</span>
-</span><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">entry</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">val</span> <span class="o">==</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">prev</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">prev</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">head</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">prev</span> <span class="o">=</span> <span class="n">entry</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">entry</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="k">return</span> <span class="n">head</span><span class="p">;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock lang:c %}
+Node<em> find_and_delete(Node </em>head, int target)
+{</p>
+
+<pre><code>Node *prev = NULL;
+Node *entry = head;
+while (entry != NULL) {
+    if (entry-&gt;val == target) {
+        if (prev) {
+            prev-&gt;next = entry-&gt;next;
+        } else {
+            head = entry-&gt;next;
+        }   
+        break;
+    }   
+    prev = entry;
+    entry = entry-&gt;next;
+}   
+return head;
+</code></pre>
+
+<p>}
+{% endcodeblock %}</p>
 
 <p>函数<code>find_and_delete</code>完成了这么一个功能：遍历一个单向链表，如果找到和给出的target相等的值，就从链表中删除这个节点。上述方法是一般c语言教科书（例如谭浩强之类）里的标准做法。但是这种方法遭到了Linus大神的强烈鄙视和唾弃，认为这是不懂指针的人的做法。Linus提到了一个使用二级指针的方法<code>*pp = entry-&gt;next</code>可以让我们不需要判断就可以删除，这是怎么做到的呢？</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="nf">find_and_delete2</span><span class="p">(</span><span class="n">Node</span> <span class="o">**</span><span class="n">head</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">while</span> <span class="p">(</span><span class="o">*</span><span class="n">head</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">Node</span> <span class="o">*</span><span class="n">entry</span> <span class="o">=</span> <span class="o">*</span><span class="n">head</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">val</span> <span class="o">==</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="o">*</span><span class="n">head</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>        <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">head</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;(</span><span class="n">entry</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">next</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% codeblock lang:c %}
+void find_and_delete2(Node **head, int target)
+{</p>
+
+<pre><code>while (*head != NULL) {
+    Node *entry = *head;
+    if (entry-&gt;val == target) {
+        *head = entry-&gt;next;
+        break;
+    }   
+    head = &amp;(entry-&gt;next);
+}   
+</code></pre>
+
+<p>}
+{% endcodeblock %}</p>
 
 <p>在<code>find_and_delete2</code>函数中，巧妙的使用了一个二级指针，从而直接修改了当前entry指针的指向，代码精简了很多。不过这个代码并非很容易正确实现（大家可以自己试试，能不能一遍写正确）。(特别的，想想<code>head = &amp;(entry-&gt;next)，</code>和<code>*head = entry-&gt;next</code>有什么区别？ )</p>
 
@@ -138,190 +94,7 @@
 
 <p>最后，上个完整的测试代码例子，供懒得敲代码的人玩耍：</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (linked_list_delete.c)</span> <a href='/downloads/code/linked_list_delete.c'>download</a></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;string.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">NodeStruct</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">val</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">NodeStruct</span> <span class="o">*</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">typedef</span> <span class="k">struct</span> <span class="n">NodeStruct</span> <span class="n">Node</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Node</span><span class="o">*</span> <span class="nf">find_and_delete</span><span class="p">(</span><span class="n">Node</span> <span class="o">*</span><span class="n">head</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">Node</span> <span class="o">*</span><span class="n">prev</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">Node</span> <span class="o">*</span><span class="n">entry</span> <span class="o">=</span> <span class="n">head</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">entry</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">entry</span><span class="o">-&gt;</span><span class="n">val</span> <span class="o">==</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="n">prev</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>                <span class="n">prev</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>                <span class="n">head</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>            <span class="p">}</span>
-</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="n">prev</span> <span class="o">=</span> <span class="n">entry</span><span class="p">;</span>
-</span><span class='line'>        <span class="n">entry</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">head</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">find_and_delete2</span><span class="p">(</span><span class="n">Node</span> <span class="o">**</span><span class="n">head</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="o">*</span><span class="n">head</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Node</span> <span class="o">*</span><span class="n">entry</span> <span class="o">=</span> <span class="o">*</span><span class="n">head</span><span class="p">;</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">entry</span><span class="o">-&gt;</span><span class="n">val</span> <span class="o">==</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="o">*</span><span class="n">head</span> <span class="o">=</span> <span class="n">entry</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="n">head</span> <span class="o">=</span> <span class="o">&amp;</span><span class="p">(</span><span class="n">entry</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Node</span> <span class="o">*</span><span class="nf">make_list</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">[],</span> <span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">Node</span> <span class="o">*</span><span class="n">result</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">Node</span> <span class="o">*</span><span class="n">runner</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">Node</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">Node</span><span class="p">));</span>
-</span><span class='line'>    <span class="n">result</span><span class="o">-&gt;</span><span class="n">val</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-</span><span class='line'>    <span class="n">runner</span> <span class="o">=</span> <span class="n">result</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">runner</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="p">(</span><span class="n">Node</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">Node</span><span class="p">));</span>
-</span><span class='line'>        <span class="n">runner</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">val</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-</span><span class='line'>        <span class="n">runner</span> <span class="o">=</span> <span class="n">runner</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">print_list</span><span class="p">(</span><span class="n">Node</span> <span class="o">*</span><span class="n">l</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">l</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">l</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;-&gt;&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">a</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">};</span>
-</span><span class='line'>    <span class="n">Node</span> <span class="o">*</span><span class="n">l</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">print_list</span><span class="p">(</span><span class="n">l</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">l</span> <span class="o">=</span> <span class="n">find_and_delete</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">print_list</span><span class="p">(</span><span class="n">l</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">l</span> <span class="o">=</span> <span class="n">find_and_delete</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">print_list</span><span class="p">(</span><span class="n">l</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">Node</span> <span class="o">*</span><span class="n">l2</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="mi">5</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">print_list</span><span class="p">(</span><span class="n">l2</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">find_and_delete2</span><span class="p">(</span><span class="o">&amp;</span><span class="n">l2</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">print_list</span><span class="p">(</span><span class="n">l2</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">find_and_delete2</span><span class="p">(</span><span class="o">&amp;</span><span class="n">l2</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">print_list</span><span class="p">(</span><span class="n">l2</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>{% include_code linked_list_delete.c %}</p>
 ]]></content>
   </entry>
   
