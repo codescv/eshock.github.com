@@ -3,7 +3,7 @@ layout: post
 title: "使用Key Indexing来避免初始化"
 date: 2013-08-04 16:59
 comments: true
-categories: 
+categories: algorithms
 ---
 
 在c/c++中, 使用`new`或者`malloc`来分配int数组是很快的, 因为没有初始化过程. 但是在使用时会有问题: 如果
