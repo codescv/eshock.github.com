@@ -4,7 +4,7 @@
   <title><![CDATA[Hacking is great fun.]]></title>
   <link href="http://eshock.github.io/atom.xml" rel="self"/>
   <link href="http://eshock.github.io/"/>
-  <updated>2013-08-11T23:08:58+08:00</updated>
+  <updated>2013-09-07T13:04:53+08:00</updated>
   <id>http://eshock.github.io/</id>
   <author>
     <name><![CDATA[Chi Zhang]]></name>
@@ -12,6 +12,561 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[排列问题]]></title>
+    <link href="http://eshock.github.io/blog/2013/09/07/permutations/"/>
+    <updated>2013-09-07T12:47:00+08:00</updated>
+    <id>http://eshock.github.io/blog/2013/09/07/permutations</id>
+    <content type="html"><![CDATA[<h2>Kth Permutation</h2>
+
+<p>有一组数例如&#8221;123456&#8221;, 它们可以组成 <code>n!</code>种排列, 将这些数从小到大排列:</p>
+
+<pre><code>"123456"
+"123465"
+"123546"
+...
+</code></pre>
+
+<p>问题: 在这些排列中,如何求出第k大的数(k从0开始)?</p>
+
+<p>思考: 考虑简单的情况 n = 3:</p>
+
+<pre><code>perm   k   k / (n-1)!
+123    0   0
+132    1   0
+213    2   1
+231    3   1
+312    4   2
+321    5   2
+</code></pre>
+
+<p>由于在n个元素组成的排列中, 以某个元素i开头的排列共有(n-1)!个. 不难得出结论:
+1. 第k大的排列以 perm[k/(n-1)!] 开头.
+2. 第k大的n个元素的排列, 等于以perm[k/(n-1)!]开头的元素, 加上去掉这个元素后剩下的元素组成的第 k % (n-1)! 大的排列.
+于是就有了一个很简单的递归关系:</p>
+
+<pre><code>kth_perm(perm, k) = perm[k/(n-1)!]  +  kth_perm(perm[0..i-1] + perm[i..n-1], k % (n-1)!)
+</code></pre>
+
+<p>根据这个关系可以写出kth_permutation的代码:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">kth_permutation</span><span class="p">(</span><span class="k">const</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">vec</span><span class="p">,</span> <span class="kt">int</span> <span class="n">k</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">vec</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">vec</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">k</span> <span class="o">%=</span> <span class="n">fact</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">t</span> <span class="o">=</span> <span class="n">fact</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">k</span> <span class="o">/</span> <span class="n">t</span><span class="p">;</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">kk</span> <span class="o">=</span> <span class="n">k</span> <span class="o">%</span> <span class="n">t</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span><span class='line'>        <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">left</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">copy</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="o">+</span><span class="n">i</span><span class="p">,</span> <span class="n">back_inserter</span><span class="p">(</span><span class="n">left</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">copy</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">vec</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">back_inserter</span><span class="p">(</span><span class="n">left</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">left</span> <span class="o">=</span> <span class="n">kth_permutation</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">kk</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">copy</span><span class="p">(</span><span class="n">left</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">left</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">back_inserter</span><span class="p">(</span><span class="n">result</span><span class="p">));</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Permutation Rank</h2>
+
+<p>给定一个排列&#8221;231&#8221;, 它是&#8221;123&#8221;的排列中第几大的?</p>
+
+<p>由于2是第1大的, 因此有 <code>2! * 1</code> 个首位比 2 小的.</p>
+
+<p>由于3是剩下的数中第1大的, 因此有 <code>1! * 1</code> 个第二位比3小的.</p>
+
+<p>因此比&#8221;231&#8221;小的 有 <code>2! * 1 + 1 ! * 1 = 3</code>个, 因此&#8221;231&#8221;是第3大的. (均从0开始)</p>
+
+<p>一个比较naive的实现：</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="kt">int</span> <span class="n">permutation_rank</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">vec</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vec2</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">vec</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">sort</span><span class="p">(</span><span class="n">vec2</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">vec2</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">ranks</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">vec2</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">ranks</span><span class="p">[</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">vec</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">vec</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">rank</span> <span class="o">+=</span> <span class="n">fact</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ranks</span><span class="p">[</span><span class="n">vec</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span>
+</span><span class='line'>            <span class="k">for</span> <span class="p">(</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">ranks</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">ranks</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="o">++</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">first</span> <span class="o">&gt;</span> <span class="n">vec</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</span><span class='line'>                    <span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="o">--</span><span class="p">;</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>            <span class="n">n</span><span class="o">--</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">rank</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Next permutation</h2>
+
+<p>已知一个排列&#8221;146532&#8221;, 如何求出比它大的下一个排列? 这个问题被称为next_permutation.</p>
+
+<p>一个简单的方法是, 使用前面的结论, 首先求出rank, 然后求第rank+1的排列.</p>
+
+<pre><code>next_permutation(vec):
+    k = rank(vec)
+    return kth_permutation(vec, k+1)
+</code></pre>
+
+<p>不过也有一个更加subtle, 效率也更高的方法:</p>
+
+<p>首先找出最大的i ,使得 <code>a[i] &lt; a[i+1]</code>, 例如</p>
+
+<pre><code>1 4 6 5 3 2
+  i
+</code></pre>
+
+<p>此时, a是所有以a[0..i]开头的排列中最大的. 也就是说,
+1 4 6 5 3 2是所有 1 4 开头排列中最大的. (如果这一步找不到, 说明原序列倒序排列, 已经是最大的一个排列了.)</p>
+
+<p>现在我们要使a变大, 但是变大的幅度要尽可能小, 因此我们要找到一个刚好比a[i]大的数, 也就是比a[i]大的数中最小的一个.</p>
+
+<p>因此,我们找出最大的j, 使得 <code>a[i] &lt; a[j]</code>:</p>
+
+<pre><code>1 4 6 5 3 2
+  i   j
+</code></pre>
+
+<p>a[j]就是比a[i]大的数中最小的一个. 我们把它和a[i]交换:</p>
+
+<pre><code>1 5 6 4 3 2
+  i   j
+</code></pre>
+
+<p>此时, a是 a[0..i]开头的数中最大的一个, 这不满足我们的要求, 我们希望它是最小的一个. 因此, 我们将a[i+1..n-1]倒序:</p>
+
+<pre><code>1 5 2 3 4 6
+</code></pre>
+
+<p>即为所求. c++实现:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="kt">void</span> <span class="n">reverse</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">num</span><span class="p">,</span> <span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">--</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">swap</span><span class="p">(</span><span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">num</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+</span><span class='line'>            <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">nextPermutation</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">num</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// find max i where num[i] &lt; num[i+1]</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">2</span><span class="p">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="n">i</span><span class="o">--</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">reverse</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// find max j where num[i] &lt; num[j]</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">j</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">num</span><span class="p">[</span><span class="n">j</span><span class="p">];</span> <span class="n">j</span><span class="o">--</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">swap</span><span class="p">(</span><span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">num</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">reverse</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[为virtualbox中的Linux虚拟机磁盘扩容]]></title>
+    <link href="http://eshock.github.io/blog/2013/08/20/resizing-disk-size-in-virtualbox/"/>
+    <updated>2013-08-20T20:02:00+08:00</updated>
+    <id>http://eshock.github.io/blog/2013/08/20/resizing-disk-size-in-virtualbox</id>
+    <content type="html"><![CDATA[<p>最近想自己hack一下android的源代码, 可是发现代码好大啊, 编译一下大概需要40G的空闲空间. 而之前装好的Linux本来硬盘就只有40G, 于是研究了一下, 发现是可以直接扩容的, 虽然步骤有点麻烦.</p>
+
+<h2>备份数据</h2>
+
+<p>虽然说按照这个步骤做应该不会出什么问题, 但是重装系统毕竟是个麻烦事, 所以在扩容之前, 先做一下备份! 避免产生人品问题而后悔莫及. 毕竟备份虚拟机还是很省事的, 直接整个目录拷贝一份即可.</p>
+
+<h2>扩大VirtualDisk</h2>
+
+<p>我们先把VirtualBox里的这块硬盘扩大:</p>
+
+<pre><code>C:
+cd "C:\Program Files\Oracle\VirtualBox"
+VBoxManage modifyhd "D:\VM\mint-xfce\mint-xfce.vdi" --resize 1000000
+</code></pre>
+
+<p>正常的话, 系统会输出:</p>
+
+<pre><code>0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+</code></pre>
+
+<p>然后就退出了.</p>
+
+<p>我们可以去VirtualBox里看看硬盘大小:</p>
+
+<p><img src="images/virtualdisk.png" alt="" /></p>
+
+<p>已经变成1000G了(其实我不小心多打了1个0, 不过无所谓了).</p>
+
+<h2>在Linux中创建新的分区</h2>
+
+<p>进入Linux, 切换为root用户, 运行<code>fdisk -l</code>:</p>
+
+<pre><code>chi-VirtualBox ~ # fdisk -l
+
+Disk /dev/sda: 1048.6 GB, 1048576000000 bytes
+255 heads, 63 sectors/track, 127482 cylinders, total 2048000000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00067091
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048      499711      248832   83  Linux
+/dev/sda2          501758    83884031    41691137    5  Extended
+/dev/sda5          501760    83884031    41691136   8e  Linux LVM
+
+Disk /dev/mapper/mint--vg-root: 40.5 GB, 40542142464 bytes
+255 heads, 63 sectors/track, 4928 cylinders, total 79183872 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/mapper/mint--vg-root doesn't contain a valid partition table
+
+Disk /dev/mapper/mint--vg-swap_1: 2147 MB, 2147483648 bytes
+255 heads, 63 sectors/track, 261 cylinders, total 4194304 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/mapper/mint--vg-swap_1 doesn't contain a valid partition table
+</code></pre>
+
+<p>可以看到, 虽然硬盘的大小已经扩大了, 但是分区表还是没变. 所以现在我们去创建一个新的分区.
+在我的Linux Mint里面有图形化界面可以创建, 所以我就不用<code>fdisk</code>了, 免得出错, 反正记得要
+创建一个primary分区, 分区类型要选lvm(8e), 完成之后, 里面的分区应该是这样:</p>
+
+<pre><code>chi-VirtualBox ~ # fdisk -l
+
+Disk /dev/sda: 1048.6 GB, 1048576000000 bytes
+255 heads, 63 sectors/track, 127482 cylinders, total 2048000000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00067091
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048      499711      248832   83  Linux
+/dev/sda2          501758    83884031    41691137    5  Extended
+/dev/sda3        83886080  2047999999   982056960   8e  Linux LVM
+/dev/sda5          501760    83884031    41691136   8e  Linux LVM
+
+Disk /dev/mapper/mint--vg-root: 40.5 GB, 40542142464 bytes
+255 heads, 63 sectors/track, 4928 cylinders, total 79183872 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/mapper/mint--vg-root doesn't contain a valid partition table
+
+Disk /dev/mapper/mint--vg-swap_1: 2147 MB, 2147483648 bytes
+255 heads, 63 sectors/track, 261 cylinders, total 4194304 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/mapper/mint--vg-swap_1 doesn't contain a valid partition table
+</code></pre>
+
+<p>其中<code>/dev/sda3</code>是我们新创建的分区.</p>
+
+<h2>创建和扩展lvm分区</h2>
+
+<h3>扩大volume group</h3>
+
+<p>由于使用了lvm, 我们可以方便的扩展已有分区. 首先查看已有的volume group:</p>
+
+<pre><code>chi-VirtualBox ~ # vgdisplay 
+
+--- Volume group ---
+VG Name               mint-vg
+System ID             
+Format                lvm2
+Metadata Areas        1
+Metadata Sequence No  3
+VG Access             read/write
+VG Status             resizable
+MAX LV                0
+Cur LV                2
+Open LV               2
+Max PV                0
+Cur PV                1
+Act PV                1
+VG Size               39.76 GiB
+PE Size               4.00 MiB
+Total PE              10178
+Alloc PE / Size       10178 / 39.76 GiB
+Free  PE / Size       0 / 0   
+VG UUID               aR8Gl4-toof-YxoL-Jo2L-X8it-wfEe-B1YxUF
+</code></pre>
+
+<p>可以看到, 已有一个volume group, 我们可以把<code>/dev/sda3</code>加到这个volume group里面:</p>
+
+<pre><code>chi-VirtualBox ~ # vgextend mint-vg /dev/sda3
+
+No physical volume label read from /dev/sda3
+Writing physical volume data to disk "/dev/sda3"
+Physical volume "/dev/sda3" successfully created
+Volume group "mint-vg" successfully extended
+</code></pre>
+
+<p>我们再看看volume group的情况:</p>
+
+<pre><code>chi-VirtualBox ~ # vgdisplay 
+
+--- Volume group ---
+VG Name               mint-vg
+System ID             
+Format                lvm2
+Metadata Areas        2
+Metadata Sequence No  4
+VG Access             read/write
+VG Status             resizable
+MAX LV                0
+Cur LV                2
+Open LV               2
+Max PV                0
+Cur PV                2
+Act PV                2
+VG Size               976.32 GiB
+PE Size               4.00 MiB
+Total PE              249937
+Alloc PE / Size       10178 / 39.76 GiB
+Free  PE / Size       239759 / 936.56 GiB
+VG UUID               aR8Gl4-toof-YxoL-Jo2L-X8it-wfEe-B1YxUF
+</code></pre>
+
+<p>可以看到, 原来的volume group已经被我们扩大到了<code>976.32GB</code>.</p>
+
+<h3>扩大 logical volume</h3>
+
+<p>首先, 我们查看目前的logical Volume:</p>
+
+<pre><code>chi-VirtualBox ~ # lvdisplay 
+
+--- Logical volume ---
+LV Path                /dev/mint-vg/root
+LV Name                root
+VG Name                mint-vg
+LV UUID                2hNBQf-1zGs-3nZF-4feA-uR9W-WVDQ-32lLm4
+LV Write Access        read/write
+LV Creation host, time mint, 2013-07-23 09:26:24 +0800
+LV Status              available
+# open                 1
+LV Size                37.76 GiB
+Current LE             9666
+Segments               1
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           252:0
+
+--- Logical volume ---
+LV Path                /dev/mint-vg/swap_1
+LV Name                swap_1
+VG Name                mint-vg
+LV UUID                fD6Mwy-IYEy-ZxXN-aPPW-WNn7-catg-o1bRsX
+LV Write Access        read/write
+LV Creation host, time mint, 2013-07-23 09:26:24 +0800
+LV Status              available
+# open                 2
+LV Size                2.00 GiB
+Current LE             512
+Segments               1
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           252:1
+</code></pre>
+
+<p>可以看到, 系统中只有一个logical Volume, 它是<code>/root</code>的挂载点. 我们现在要做的就是将这个logical
+volume 扩大. 在logical volume扩大时, 会自动使用volume group中的空间.</p>
+
+<pre><code>chi-VirtualBox ~ # lvextend -L 100G /dev/mint-vg/root
+Extending logical volume root to 100.00 GiB
+Logical volume root successfully resized
+
+chi-VirtualBox ~ # lvdisplay 
+--- Logical volume ---
+LV Path                /dev/mint-vg/root
+LV Name                root
+VG Name                mint-vg
+LV UUID                2hNBQf-1zGs-3nZF-4feA-uR9W-WVDQ-32lLm4
+LV Write Access        read/write
+LV Creation host, time mint, 2013-07-23 09:26:24 +0800
+LV Status              available
+# open                 1
+LV Size                100.00 GiB
+Current LE             25600
+Segments               2
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           252:0
+
+--- Logical volume ---
+LV Path                /dev/mint-vg/swap_1
+LV Name                swap_1
+VG Name                mint-vg
+LV UUID                fD6Mwy-IYEy-ZxXN-aPPW-WNn7-catg-o1bRsX
+LV Write Access        read/write
+LV Creation host, time mint, 2013-07-23 09:26:24 +0800
+LV Status              available
+# open                 2
+LV Size                2.00 GiB
+Current LE             512
+Segments               1
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           252:1
+</code></pre>
+
+<p>可以看到, logical volume 已经成功的变大为了100GB.</p>
+
+<h3>扩大ext4分区</h3>
+
+<p>最后一步, 我们需要把logical volume上的ext4分区也扩大, 这样才能真正的存下文件.</p>
+
+<pre><code>chi-VirtualBox ~ # resize2fs /dev/mint-vg/root 
+resize2fs 1.42.5 (29-Jul-2012)
+Filesystem at /dev/mint-vg/root is mounted on /; on-line resizing required
+old_desc_blocks = 3, new_desc_blocks = 7
+The filesystem on /dev/mint-vg/root is now 26214400 blocks long.
+
+chi-VirtualBox ~ # df -h
+Filesystem                 Size  Used Avail Use% Mounted on
+/dev/mapper/mint--vg-root   99G   26G   69G  28% /
+none                       4.0K     0  4.0K   0% /sys/fs/cgroup
+udev                       985M  4.0K  985M   1% /dev
+tmpfs                      201M  896K  200M   1% /run
+none                       5.0M     0  5.0M   0% /run/lock
+none                      1002M   72K 1002M   1% /run/shm
+none                       100M   16K  100M   1% /run/user
+/dev/sda1                  228M   75M  141M  35% /boot
+</code></pre>
+
+<p>可以看到<code>/</code>下面的空间已经成功扩大了.</p>
+
+<h2>关于lvm的一些知识&hellip;</h2>
+
+<p>相信看了上面的步骤你已经和我一样晕了&hellip;下面我来试图解释一下lvm中的各种术语</p>
+
+<ul>
+<li>首先是volume group, 这个你可以想成是扩展分区, 不同的是volume group可以跨多块硬盘多个设备(这是lvm的牛逼之处), 用<code>vgdisplay</code>可以查看.</li>
+<li>然后是physical volume, 这个就是传统意义上的分区, 例如/dev/sda5, 用<code>pvdisplay</code>可以查看</li>
+<li>然后是logical volume, 这个就是lvm中的逻辑分区, 地位相当于逻辑分区. 你硬盘上的目录, 就是挂载在logical volume上的. 用<code>lvdisplay</code>可以查看.</li>
+</ul>
+
+
+<h3>lvm有什么好处?</h3>
+
+<p>简单的讲, 就是你可以分出多个物理上的逻辑分区(例如 <code>/dev/sda1 - /dev/sda5</code>), 然后把它们放到同一个volume group中, 再从volume group中划分出不同的logical volume, 用于不同目录的挂载. 这样, 相当于在物理上的逻辑分区之上又抽象出了新的逻辑分区, 新的逻辑分区可以任意变化大小, 甚至可以横跨不同的硬盘, 非常灵活.</p>
+
+<p>一句话总结一下: 用fdisk创建physical volume, physical volume 组成 volume group, volume group划分为若干logical volume, 目录挂载在logical volume之上.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[关于python decorators]]></title>

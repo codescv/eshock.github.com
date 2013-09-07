@@ -1,0 +1,566 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>为virtualbox中的Linux虚拟机磁盘扩容 - Hacking is great fun.</title>
+  <meta name="author" content="Chi Zhang">
+
+  
+  <meta name="description" content="最近想自己hack一下android的源代码, 可是发现代码好大啊, 编译一下大概需要40G的空闲空间. 而之前装好的Linux本来硬盘就只有40G, 于是研究了一下, 发现是可以直接扩容的, 虽然步骤有点麻烦. 备份数据 虽然说按照这个步骤做应该不会出什么问题, 但是重装系统毕竟是个麻烦事, &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://eshock.github.io/blog/2013/08/20/resizing-disk-size-in-virtualbox">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Hacking is great fun." type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Hacking is great fun.</a></h1>
+  
+    <h2>You can do anything you set your mind to.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:eshock.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="http://eshock.github.com/ejabberd">Ejabberd</a></li>
+  <li><a href="http://eshock.blogbus.com">BlogBus(Old Blogs)</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">为virtualbox中的Linux虚拟机磁盘扩容</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-08-20T20:02:00+08:00" pubdate data-updated="true">Aug 20<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>最近想自己hack一下android的源代码, 可是发现代码好大啊, 编译一下大概需要40G的空闲空间. 而之前装好的Linux本来硬盘就只有40G, 于是研究了一下, 发现是可以直接扩容的, 虽然步骤有点麻烦.</p>
+
+<h2>备份数据</h2>
+
+<p>虽然说按照这个步骤做应该不会出什么问题, 但是重装系统毕竟是个麻烦事, 所以在扩容之前, 先做一下备份! 避免产生人品问题而后悔莫及. 毕竟备份虚拟机还是很省事的, 直接整个目录拷贝一份即可.</p>
+
+<h2>扩大VirtualDisk</h2>
+
+<p>我们先把VirtualBox里的这块硬盘扩大:</p>
+
+<pre><code>C:
+cd "C:\Program Files\Oracle\VirtualBox"
+VBoxManage modifyhd "D:\VM\mint-xfce\mint-xfce.vdi" --resize 1000000
+</code></pre>
+
+<p>正常的话, 系统会输出:</p>
+
+<pre><code>0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+</code></pre>
+
+<p>然后就退出了.</p>
+
+<p>我们可以去VirtualBox里看看硬盘大小:</p>
+
+<p><img src="images/virtualdisk.png" alt="" /></p>
+
+<p>已经变成1000G了(其实我不小心多打了1个0, 不过无所谓了).</p>
+
+<h2>在Linux中创建新的分区</h2>
+
+<p>进入Linux, 切换为root用户, 运行<code>fdisk -l</code>:</p>
+
+<pre><code>chi-VirtualBox ~ # fdisk -l
+
+Disk /dev/sda: 1048.6 GB, 1048576000000 bytes
+255 heads, 63 sectors/track, 127482 cylinders, total 2048000000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00067091
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048      499711      248832   83  Linux
+/dev/sda2          501758    83884031    41691137    5  Extended
+/dev/sda5          501760    83884031    41691136   8e  Linux LVM
+
+Disk /dev/mapper/mint--vg-root: 40.5 GB, 40542142464 bytes
+255 heads, 63 sectors/track, 4928 cylinders, total 79183872 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/mapper/mint--vg-root doesn't contain a valid partition table
+
+Disk /dev/mapper/mint--vg-swap_1: 2147 MB, 2147483648 bytes
+255 heads, 63 sectors/track, 261 cylinders, total 4194304 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/mapper/mint--vg-swap_1 doesn't contain a valid partition table
+</code></pre>
+
+<p>可以看到, 虽然硬盘的大小已经扩大了, 但是分区表还是没变. 所以现在我们去创建一个新的分区.
+在我的Linux Mint里面有图形化界面可以创建, 所以我就不用<code>fdisk</code>了, 免得出错, 反正记得要
+创建一个primary分区, 分区类型要选lvm(8e), 完成之后, 里面的分区应该是这样:</p>
+
+<pre><code>chi-VirtualBox ~ # fdisk -l
+
+Disk /dev/sda: 1048.6 GB, 1048576000000 bytes
+255 heads, 63 sectors/track, 127482 cylinders, total 2048000000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00067091
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048      499711      248832   83  Linux
+/dev/sda2          501758    83884031    41691137    5  Extended
+/dev/sda3        83886080  2047999999   982056960   8e  Linux LVM
+/dev/sda5          501760    83884031    41691136   8e  Linux LVM
+
+Disk /dev/mapper/mint--vg-root: 40.5 GB, 40542142464 bytes
+255 heads, 63 sectors/track, 4928 cylinders, total 79183872 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/mapper/mint--vg-root doesn't contain a valid partition table
+
+Disk /dev/mapper/mint--vg-swap_1: 2147 MB, 2147483648 bytes
+255 heads, 63 sectors/track, 261 cylinders, total 4194304 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/mapper/mint--vg-swap_1 doesn't contain a valid partition table
+</code></pre>
+
+<p>其中<code>/dev/sda3</code>是我们新创建的分区.</p>
+
+<h2>创建和扩展lvm分区</h2>
+
+<h3>扩大volume group</h3>
+
+<p>由于使用了lvm, 我们可以方便的扩展已有分区. 首先查看已有的volume group:</p>
+
+<pre><code>chi-VirtualBox ~ # vgdisplay 
+
+--- Volume group ---
+VG Name               mint-vg
+System ID             
+Format                lvm2
+Metadata Areas        1
+Metadata Sequence No  3
+VG Access             read/write
+VG Status             resizable
+MAX LV                0
+Cur LV                2
+Open LV               2
+Max PV                0
+Cur PV                1
+Act PV                1
+VG Size               39.76 GiB
+PE Size               4.00 MiB
+Total PE              10178
+Alloc PE / Size       10178 / 39.76 GiB
+Free  PE / Size       0 / 0   
+VG UUID               aR8Gl4-toof-YxoL-Jo2L-X8it-wfEe-B1YxUF
+</code></pre>
+
+<p>可以看到, 已有一个volume group, 我们可以把<code>/dev/sda3</code>加到这个volume group里面:</p>
+
+<pre><code>chi-VirtualBox ~ # vgextend mint-vg /dev/sda3
+
+No physical volume label read from /dev/sda3
+Writing physical volume data to disk "/dev/sda3"
+Physical volume "/dev/sda3" successfully created
+Volume group "mint-vg" successfully extended
+</code></pre>
+
+<p>我们再看看volume group的情况:</p>
+
+<pre><code>chi-VirtualBox ~ # vgdisplay 
+
+--- Volume group ---
+VG Name               mint-vg
+System ID             
+Format                lvm2
+Metadata Areas        2
+Metadata Sequence No  4
+VG Access             read/write
+VG Status             resizable
+MAX LV                0
+Cur LV                2
+Open LV               2
+Max PV                0
+Cur PV                2
+Act PV                2
+VG Size               976.32 GiB
+PE Size               4.00 MiB
+Total PE              249937
+Alloc PE / Size       10178 / 39.76 GiB
+Free  PE / Size       239759 / 936.56 GiB
+VG UUID               aR8Gl4-toof-YxoL-Jo2L-X8it-wfEe-B1YxUF
+</code></pre>
+
+<p>可以看到, 原来的volume group已经被我们扩大到了<code>976.32GB</code>.</p>
+
+<h3>扩大 logical volume</h3>
+
+<p>首先, 我们查看目前的logical Volume:</p>
+
+<pre><code>chi-VirtualBox ~ # lvdisplay 
+
+--- Logical volume ---
+LV Path                /dev/mint-vg/root
+LV Name                root
+VG Name                mint-vg
+LV UUID                2hNBQf-1zGs-3nZF-4feA-uR9W-WVDQ-32lLm4
+LV Write Access        read/write
+LV Creation host, time mint, 2013-07-23 09:26:24 +0800
+LV Status              available
+# open                 1
+LV Size                37.76 GiB
+Current LE             9666
+Segments               1
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           252:0
+
+--- Logical volume ---
+LV Path                /dev/mint-vg/swap_1
+LV Name                swap_1
+VG Name                mint-vg
+LV UUID                fD6Mwy-IYEy-ZxXN-aPPW-WNn7-catg-o1bRsX
+LV Write Access        read/write
+LV Creation host, time mint, 2013-07-23 09:26:24 +0800
+LV Status              available
+# open                 2
+LV Size                2.00 GiB
+Current LE             512
+Segments               1
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           252:1
+</code></pre>
+
+<p>可以看到, 系统中只有一个logical Volume, 它是<code>/root</code>的挂载点. 我们现在要做的就是将这个logical
+volume 扩大. 在logical volume扩大时, 会自动使用volume group中的空间.</p>
+
+<pre><code>chi-VirtualBox ~ # lvextend -L 100G /dev/mint-vg/root
+Extending logical volume root to 100.00 GiB
+Logical volume root successfully resized
+
+chi-VirtualBox ~ # lvdisplay 
+--- Logical volume ---
+LV Path                /dev/mint-vg/root
+LV Name                root
+VG Name                mint-vg
+LV UUID                2hNBQf-1zGs-3nZF-4feA-uR9W-WVDQ-32lLm4
+LV Write Access        read/write
+LV Creation host, time mint, 2013-07-23 09:26:24 +0800
+LV Status              available
+# open                 1
+LV Size                100.00 GiB
+Current LE             25600
+Segments               2
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           252:0
+
+--- Logical volume ---
+LV Path                /dev/mint-vg/swap_1
+LV Name                swap_1
+VG Name                mint-vg
+LV UUID                fD6Mwy-IYEy-ZxXN-aPPW-WNn7-catg-o1bRsX
+LV Write Access        read/write
+LV Creation host, time mint, 2013-07-23 09:26:24 +0800
+LV Status              available
+# open                 2
+LV Size                2.00 GiB
+Current LE             512
+Segments               1
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           252:1
+</code></pre>
+
+<p>可以看到, logical volume 已经成功的变大为了100GB.</p>
+
+<h3>扩大ext4分区</h3>
+
+<p>最后一步, 我们需要把logical volume上的ext4分区也扩大, 这样才能真正的存下文件.</p>
+
+<pre><code>chi-VirtualBox ~ # resize2fs /dev/mint-vg/root 
+resize2fs 1.42.5 (29-Jul-2012)
+Filesystem at /dev/mint-vg/root is mounted on /; on-line resizing required
+old_desc_blocks = 3, new_desc_blocks = 7
+The filesystem on /dev/mint-vg/root is now 26214400 blocks long.
+
+chi-VirtualBox ~ # df -h
+Filesystem                 Size  Used Avail Use% Mounted on
+/dev/mapper/mint--vg-root   99G   26G   69G  28% /
+none                       4.0K     0  4.0K   0% /sys/fs/cgroup
+udev                       985M  4.0K  985M   1% /dev
+tmpfs                      201M  896K  200M   1% /run
+none                       5.0M     0  5.0M   0% /run/lock
+none                      1002M   72K 1002M   1% /run/shm
+none                       100M   16K  100M   1% /run/user
+/dev/sda1                  228M   75M  141M  35% /boot
+</code></pre>
+
+<p>可以看到<code>/</code>下面的空间已经成功扩大了.</p>
+
+<h2>关于lvm的一些知识&hellip;</h2>
+
+<p>相信看了上面的步骤你已经和我一样晕了&hellip;下面我来试图解释一下lvm中的各种术语</p>
+
+<ul>
+<li>首先是volume group, 这个你可以想成是扩展分区, 不同的是volume group可以跨多块硬盘多个设备(这是lvm的牛逼之处), 用<code>vgdisplay</code>可以查看.</li>
+<li>然后是physical volume, 这个就是传统意义上的分区, 例如/dev/sda5, 用<code>pvdisplay</code>可以查看</li>
+<li>然后是logical volume, 这个就是lvm中的逻辑分区, 地位相当于逻辑分区. 你硬盘上的目录, 就是挂载在logical volume上的. 用<code>lvdisplay</code>可以查看.</li>
+</ul>
+
+
+<h3>lvm有什么好处?</h3>
+
+<p>简单的讲, 就是你可以分出多个物理上的逻辑分区(例如 <code>/dev/sda1 - /dev/sda5</code>), 然后把它们放到同一个volume group中, 再从volume group中划分出不同的logical volume, 用于不同目录的挂载. 这样, 相当于在物理上的逻辑分区之上又抽象出了新的逻辑分区, 新的逻辑分区可以任意变化大小, 甚至可以横跨不同的硬盘, 非常灵活.</p>
+
+<p>一句话总结一下: 用fdisk创建physical volume, physical volume 组成 volume group, volume group划分为若干logical volume, 目录挂载在logical volume之上.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Chi Zhang</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-08-20T20:02:00+08:00" pubdate data-updated="true">Aug 20<span>th</span>, 2013</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://eshock.github.io/blog/2013/08/20/resizing-disk-size-in-virtualbox/" data-via="" data-counturl="http://eshock.github.io/blog/2013/08/20/resizing-disk-size-in-virtualbox/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/08/11/python-decorators/" title="Previous Post: 关于python decorators">&laquo; 关于python decorators</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/09/07/permutations/" title="Next Post: 排列问题">排列问题 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/09/07/permutations/">排列问题</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/08/20/resizing-disk-size-in-virtualbox/">为virtualbox中的Linux虚拟机磁盘扩容</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/08/11/python-decorators/">关于python Decorators</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/08/04/key-indexing/">使用Key Indexing来避免初始化</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/28/using-virtualenv/">使用virtualenv创建隔离的python环境</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/eshock">@eshock</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'eshock',
+            count: 10,
+            skip_forks: false,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Chi Zhang -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'eshockgithubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://eshock.github.io/blog/2013/08/20/resizing-disk-size-in-virtualbox/';
+        var disqus_url = 'http://eshock.github.io/blog/2013/08/20/resizing-disk-size-in-virtualbox/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

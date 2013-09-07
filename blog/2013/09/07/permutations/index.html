@@ -1,0 +1,508 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>排列问题 - Hacking is great fun.</title>
+  <meta name="author" content="Chi Zhang">
+
+  
+  <meta name="description" content="Kth Permutation 有一组数例如&#8221;123456&#8221;, 它们可以组成 n!种排列, 将这些数从小到大排列: "123456"
+"123465"
+"123546"
+... 问题: 在这些排列中,如何求出第k大的数(k从0开始)? 思考: 考虑简单的情况 n = 3: &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://eshock.github.io/blog/2013/09/07/permutations">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Hacking is great fun." type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Hacking is great fun.</a></h1>
+  
+    <h2>You can do anything you set your mind to.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:eshock.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="http://eshock.github.com/ejabberd">Ejabberd</a></li>
+  <li><a href="http://eshock.blogbus.com">BlogBus(Old Blogs)</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">排列问题</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-07T12:47:00+08:00" pubdate data-updated="true">Sep 7<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Kth Permutation</h2>
+
+<p>有一组数例如&#8221;123456&#8221;, 它们可以组成 <code>n!</code>种排列, 将这些数从小到大排列:</p>
+
+<pre><code>"123456"
+"123465"
+"123546"
+...
+</code></pre>
+
+<p>问题: 在这些排列中,如何求出第k大的数(k从0开始)?</p>
+
+<p>思考: 考虑简单的情况 n = 3:</p>
+
+<pre><code>perm   k   k / (n-1)!
+123    0   0
+132    1   0
+213    2   1
+231    3   1
+312    4   2
+321    5   2
+</code></pre>
+
+<p>由于在n个元素组成的排列中, 以某个元素i开头的排列共有(n-1)!个. 不难得出结论:
+1. 第k大的排列以 perm[k/(n-1)!] 开头.
+2. 第k大的n个元素的排列, 等于以perm[k/(n-1)!]开头的元素, 加上去掉这个元素后剩下的元素组成的第 k % (n-1)! 大的排列.
+于是就有了一个很简单的递归关系:</p>
+
+<pre><code>kth_perm(perm, k) = perm[k/(n-1)!]  +  kth_perm(perm[0..i-1] + perm[i..n-1], k % (n-1)!)
+</code></pre>
+
+<p>根据这个关系可以写出kth_permutation的代码:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">kth_permutation</span><span class="p">(</span><span class="k">const</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">vec</span><span class="p">,</span> <span class="kt">int</span> <span class="n">k</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">vec</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">vec</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">k</span> <span class="o">%=</span> <span class="n">fact</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">t</span> <span class="o">=</span> <span class="n">fact</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">k</span> <span class="o">/</span> <span class="n">t</span><span class="p">;</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">kk</span> <span class="o">=</span> <span class="n">k</span> <span class="o">%</span> <span class="n">t</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span><span class='line'>        <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">left</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">copy</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="o">+</span><span class="n">i</span><span class="p">,</span> <span class="n">back_inserter</span><span class="p">(</span><span class="n">left</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">copy</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">vec</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">back_inserter</span><span class="p">(</span><span class="n">left</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">left</span> <span class="o">=</span> <span class="n">kth_permutation</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">kk</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">copy</span><span class="p">(</span><span class="n">left</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">left</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">back_inserter</span><span class="p">(</span><span class="n">result</span><span class="p">));</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Permutation Rank</h2>
+
+<p>给定一个排列&#8221;231&#8221;, 它是&#8221;123&#8221;的排列中第几大的?</p>
+
+<p>由于2是第1大的, 因此有 <code>2! * 1</code> 个首位比 2 小的.</p>
+
+<p>由于3是剩下的数中第1大的, 因此有 <code>1! * 1</code> 个第二位比3小的.</p>
+
+<p>因此比&#8221;231&#8221;小的 有 <code>2! * 1 + 1 ! * 1 = 3</code>个, 因此&#8221;231&#8221;是第3大的. (均从0开始)</p>
+
+<p>一个比较naive的实现：</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="kt">int</span> <span class="n">permutation_rank</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">vec</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vec2</span><span class="p">(</span><span class="n">vec</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">vec</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">sort</span><span class="p">(</span><span class="n">vec2</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">vec2</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">ranks</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">vec2</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">ranks</span><span class="p">[</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">vec</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">vec</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">rank</span> <span class="o">+=</span> <span class="n">fact</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ranks</span><span class="p">[</span><span class="n">vec</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span>
+</span><span class='line'>            <span class="k">for</span> <span class="p">(</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">ranks</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">ranks</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="o">++</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">first</span> <span class="o">&gt;</span> <span class="n">vec</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</span><span class='line'>                    <span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="o">--</span><span class="p">;</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>            <span class="n">n</span><span class="o">--</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">rank</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Next permutation</h2>
+
+<p>已知一个排列&#8221;146532&#8221;, 如何求出比它大的下一个排列? 这个问题被称为next_permutation.</p>
+
+<p>一个简单的方法是, 使用前面的结论, 首先求出rank, 然后求第rank+1的排列.</p>
+
+<pre><code>next_permutation(vec):
+    k = rank(vec)
+    return kth_permutation(vec, k+1)
+</code></pre>
+
+<p>不过也有一个更加subtle, 效率也更高的方法:</p>
+
+<p>首先找出最大的i ,使得 <code>a[i] &lt; a[i+1]</code>, 例如</p>
+
+<pre><code>1 4 6 5 3 2
+  i
+</code></pre>
+
+<p>此时, a是所有以a[0..i]开头的排列中最大的. 也就是说,
+1 4 6 5 3 2是所有 1 4 开头排列中最大的. (如果这一步找不到, 说明原序列倒序排列, 已经是最大的一个排列了.)</p>
+
+<p>现在我们要使a变大, 但是变大的幅度要尽可能小, 因此我们要找到一个刚好比a[i]大的数, 也就是比a[i]大的数中最小的一个.</p>
+
+<p>因此,我们找出最大的j, 使得 <code>a[i] &lt; a[j]</code>:</p>
+
+<pre><code>1 4 6 5 3 2
+  i   j
+</code></pre>
+
+<p>a[j]就是比a[i]大的数中最小的一个. 我们把它和a[i]交换:</p>
+
+<pre><code>1 5 6 4 3 2
+  i   j
+</code></pre>
+
+<p>此时, a是 a[0..i]开头的数中最大的一个, 这不满足我们的要求, 我们希望它是最小的一个. 因此, 我们将a[i+1..n-1]倒序:</p>
+
+<pre><code>1 5 2 3 4 6
+</code></pre>
+
+<p>即为所求. c++实现:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="kt">void</span> <span class="n">reverse</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">num</span><span class="p">,</span> <span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">--</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">swap</span><span class="p">(</span><span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">num</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+</span><span class='line'>            <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">nextPermutation</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">num</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// find max i where num[i] &lt; num[i+1]</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">2</span><span class="p">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="n">i</span><span class="o">--</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">reverse</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// find max j where num[i] &lt; num[j]</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">j</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="n">num</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">num</span><span class="p">[</span><span class="n">j</span><span class="p">];</span> <span class="n">j</span><span class="o">--</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">swap</span><span class="p">(</span><span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">num</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">reverse</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Chi Zhang</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-07T12:47:00+08:00" pubdate data-updated="true">Sep 7<span>th</span>, 2013</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://eshock.github.io/blog/2013/09/07/permutations/" data-via="" data-counturl="http://eshock.github.io/blog/2013/09/07/permutations/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/08/20/resizing-disk-size-in-virtualbox/" title="Previous Post: 为virtualbox中的Linux虚拟机磁盘扩容">&laquo; 为virtualbox中的Linux虚拟机磁盘扩容</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/09/07/permutations/">排列问题</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/08/20/resizing-disk-size-in-virtualbox/">为virtualbox中的Linux虚拟机磁盘扩容</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/08/11/python-decorators/">关于python Decorators</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/08/04/key-indexing/">使用Key Indexing来避免初始化</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/07/28/using-virtualenv/">使用virtualenv创建隔离的python环境</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/eshock">@eshock</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'eshock',
+            count: 10,
+            skip_forks: false,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Chi Zhang -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'eshockgithubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://eshock.github.io/blog/2013/09/07/permutations/';
+        var disqus_url = 'http://eshock.github.io/blog/2013/09/07/permutations/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
